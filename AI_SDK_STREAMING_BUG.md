@@ -146,7 +146,7 @@ dataStream.writeData({
 
 ### Test Direct API
 ```bash
-INFERENCE_KEY=inf-79fdd946-6800-421c-90e0-a59fb255583a
+INFERENCE_KEY=your_heroku_inference_api_key_here
 curl -X POST https://us.inference.heroku.com/v1/chat/completions \
   -H "Authorization: Bearer $INFERENCE_KEY" \
   -H "Content-Type: application/json" \

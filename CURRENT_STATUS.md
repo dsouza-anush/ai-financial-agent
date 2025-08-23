@@ -47,9 +47,9 @@ The application deploys successfully but **does not work for end users**:
 
 ### **Environment Variables (Set Correctly)**
 ```bash
-INFERENCE_KEY=inf-79fdd946-6800-421c-90e0-a59fb255583a
-FINANCIAL_DATASETS_API_KEY=f19fbe2c-5d26-4fd6-b3a8-26c3e6f5535b
-AUTH_SECRET=W26SgT4ZoMoQZ2YEd8ekYrSIBy/E+S2BHiJTvYdwC5Y=
+INFERENCE_KEY=your_heroku_inference_api_key_here
+FINANCIAL_DATASETS_API_KEY=your_financial_datasets_api_key_here
+AUTH_SECRET=your_auth_secret_here
 DATABASE_URL=postgres://[credentials]/da3ka9tuvt9e2m?ssl=true&sslmode=require
 ```
 

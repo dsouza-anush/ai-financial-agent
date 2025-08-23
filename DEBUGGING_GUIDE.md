@@ -16,8 +16,8 @@ cd ai-financial-agent
 npm install
 
 # Setup environment (create .env.local)
-INFERENCE_KEY=inf-79fdd946-6800-421c-90e0-a59fb255583a
-FINANCIAL_DATASETS_API_KEY=f19fbe2c-5d26-4fd6-b3a8-26c3e6f5535b
+INFERENCE_KEY=your_heroku_inference_api_key_here
+FINANCIAL_DATASETS_API_KEY=your_financial_datasets_api_key_here
 AUTH_SECRET=local-test-secret-for-development-only
 DATABASE_URL=postgres://[heroku-postgres-url]
 AUTH_TRUST_HOST=true
@@ -47,7 +47,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 
 const provider = createOpenAI({
-  apiKey: 'inf-79fdd946-6800-421c-90e0-a59fb255583a',
+  apiKey: 'your_heroku_inference_api_key_here',
   baseURL: 'https://us.inference.heroku.com/v1',
   compatibility: 'strict'
 });
@@ -68,7 +68,7 @@ node --import tsx/esm test-ai.js
 ### **Test Financial API Directly**
 ```bash
 curl -X GET "https://api.financialdatasets.ai/prices/snapshot/?ticker=AAPL" \
-  -H "X-API-KEY: f19fbe2c-5d26-4fd6-b3a8-26c3e6f5535b"
+  -H "X-API-KEY: your_financial_datasets_api_key_here"
 
 # Should return JSON with AAPL price data
 ```
