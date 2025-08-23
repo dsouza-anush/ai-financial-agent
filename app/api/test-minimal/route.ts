@@ -106,7 +106,7 @@ export async function POST(request: Request) {
         
       } catch (error) {
         console.error('❌ ERROR in minimal test:', error);
-        console.error('Error stack:', error.stack);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'Unknown error');
         
         // Set query-loading to false
         dataStream.writeData({
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
         // Write error message
         dataStream.writeData({
           type: 'text-delta',
-          content: `Error occurred: ${error.message}`,
+          content: `Error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
         });
 
         // Finish with error
