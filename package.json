@@ -2,10 +2,16 @@
   "name": "ai-chatbot",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "tsx lib/db/migrate && next build",
+    "build": "tsx lib/db/migrate.ts && next build",
     "start": "next start",
+    "postinstall": "npm run db:generate",
+    "heroku-prebuild": "npm install --legacy-peer-deps",
     "lint": "next lint && biome lint --write --unsafe",
     "lint:fix": "next lint --fix && biome lint --write --unsafe",
     "format": "biome format --write",

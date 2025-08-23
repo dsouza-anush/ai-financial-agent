@@ -53,6 +53,9 @@ export async function POST(request: Request) {
     modelApiKey?: string;
   } = await request.json();
 
+  // Get Heroku Inference API key from environment if available
+  const herokuInferenceApiKey = process.env.HEROKU_INFERENCE_API_KEY;
+
   const session = await auth();
 
   if (!session || !session.user || !session.user.id) {
@@ -65,8 +68,13 @@ export async function POST(request: Request) {
     return new Response('Model not found', { status: 404 });
   }
 
-  if (!modelApiKey) {
-    return new Response('Model API key is required', { status: 400 });
+  // Check if we have the appropriate API key for the model
+  const isClaudeModel = model.apiIdentifier.startsWith('claude-');
+  if (isClaudeModel && !herokuInferenceApiKey) {
+    return new Response('Heroku Inference API key is required for Claude models', { status: 400 });
+  }
+  if (!isClaudeModel && !modelApiKey) {
+    return new Response('OpenAI API key is required for GPT models', { status: 400 });
   }
 
   const coreMessages = convertToCoreMessages(messages);
@@ -112,7 +120,7 @@ export async function POST(request: Request) {
       });
 
       const { object } = await generateObject({
-        model: customModel('gpt-4.1-nano-2025-04-14', modelApiKey),
+        model: customModel('gpt-4.1-nano-2025-04-14', modelApiKey, herokuInferenceApiKey),
         output: 'array',
         schema: z.object({
           task_name: z.string(),
@@ -174,7 +182,7 @@ export async function POST(request: Request) {
       }
 
       const result = streamText({
-        model: customModel(model.apiIdentifier, modelApiKey),
+        model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
         tools: financialToolsManager.getTools(),
         system: systemPrompt,
         messages: coreMessagesWithTaskNames,

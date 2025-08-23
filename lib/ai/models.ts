@@ -9,6 +9,12 @@ export interface Model {
 
 export const models: Array<Model> = [
   {
+    id: 'claude-4-sonnet',
+    label: 'Claude 4 Sonnet',
+    apiIdentifier: 'claude-4-sonnet',
+    description: 'Anthropic Claude 4 Sonnet via Heroku Inference API',
+  },
+  {
     id: 'gpt-4.1-nano-2025-04-14',
     label: 'GPT 4.1 nano',
     apiIdentifier: 'gpt-4.1-nano-2025-04-14',
@@ -34,4 +40,4 @@ export const models: Array<Model> = [
   },
 ] as const;
 
-export const DEFAULT_MODEL_NAME: string = 'gpt-4o';
+export const DEFAULT_MODEL_NAME: string = 'claude-4-sonnet';

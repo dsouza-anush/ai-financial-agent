@@ -1,0 +1,69 @@
+{
+  "name": "AI Financial Agent",
+  "description": "An AI-powered financial analysis and research agent built with Next.js",
+  "repository": "https://github.com/virattt/ai-financial-agent",
+  "logo": "https://cdn.jsdelivr.net/gh/virattt/ai-financial-agent/public/images/demo-thumbnail.png",
+  "keywords": ["nextjs", "ai", "financial", "agent", "openai", "postgres"],
+  "env": {
+    "HEROKU_INFERENCE_API_KEY": {
+      "description": "Heroku Inference API key (automatically provided by heroku-inference addon)",
+      "required": false
+    },
+    "OPENAI_API_KEY": {
+      "description": "Your OpenAI API key from https://platform.openai.com/ (optional if using Heroku Inference)",
+      "required": false
+    },
+    "FINANCIAL_DATASETS_API_KEY": {
+      "description": "Your Financial Datasets API key from https://financialdatasets.ai/",
+      "required": false
+    },
+    "LANGCHAIN_API_KEY": {
+      "description": "Your LangSmith API key from https://smith.langchain.com/",
+      "required": false
+    },
+    "LANGCHAIN_TRACING_V2": {
+      "description": "Enable LangSmith tracing",
+      "value": "true",
+      "required": false
+    },
+    "LANGCHAIN_PROJECT": {
+      "description": "LangSmith project name",
+      "value": "ai-financial-agent",
+      "required": false
+    },
+    "AUTH_SECRET": {
+      "description": "A random secret for NextAuth.js. Generate one at https://generate-secret.vercel.app/32",
+      "generator": "secret"
+    },
+    "DATABASE_URL": {
+      "description": "PostgreSQL database URL (automatically provided by Heroku Postgres addon)",
+      "required": true
+    },
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    }
+  },
+  "addons": [
+    {
+      "plan": "heroku-postgresql:essential-0",
+      "as": "DATABASE"
+    },
+    {
+      "plan": "heroku-inference:claude-4-sonnet",
+      "as": "HEROKU_INFERENCE"
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "stack": "heroku-22"
+}

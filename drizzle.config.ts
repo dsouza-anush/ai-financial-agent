@@ -2,7 +2,14 @@ import { config } from 'dotenv';
 import { defineConfig } from 'drizzle-kit';
 
 config({
-  path: '.env.local',
+  path: ['.env.local', '.env'].find((path) => {
+    try {
+      require('fs').accessSync(path);
+      return true;
+    } catch {
+      return false;
+    }
+  }) || '.env',
 });
 
 export default defineConfig({
@@ -11,6 +18,6 @@ export default defineConfig({
   dialect: 'postgresql',
   dbCredentials: {
     // biome-ignore lint: Forbidden non-null assertion.
-    url: process.env.POSTGRES_URL!,
+    url: process.env.DATABASE_URL || process.env.POSTGRES_URL!,
   },
 });
