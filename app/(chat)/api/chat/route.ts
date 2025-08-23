@@ -129,10 +129,14 @@ export async function POST(request: Request) {
       console.log('Using generateText approach to avoid streaming issues...');
       
       const { generateText } = await import('ai');
+      
+      // TODO: Temporarily disable financial tools due to Zod schema $schema incompatibility with Heroku Inference API
+      // The tools work but Zod schemas include $schema parameter that Heroku API rejects
+      // Once this is fixed, uncomment the tools line below
       const response = await generateText({
         model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
-        tools: financialToolsManager.getTools(),
-        system: systemPrompt,
+        // tools: financialToolsManager.getTools(),  // Temporarily disabled
+        system: systemPrompt + '\n\nNote: Financial data tools are temporarily unavailable. Please provide general financial guidance and direct users to check current market data from reliable financial sources.',
         messages: coreMessages,
         maxSteps: 10,
       });
