@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,17 +28,39 @@ export function ApiKeysModal({
   const [showFinancialKey, setShowFinancialKey] = useState(false);
   const [openAIError, setOpenAIError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [serverKeys, setServerKeys] = useState<any>(null);
+
+  useEffect(() => {
+    // Check if server-side keys are available
+    fetch('/api/keys')
+      .then(res => res.json())
+      .then(data => {
+        setServerKeys(data);
+        // If server has Inference key, pre-populate the OpenAI field
+        if (data.hasInferenceKey && !openAIKey) {
+          setOpenAIKey(data.inferenceKey);
+        }
+        // If server has Financial key, pre-populate that field
+        if (data.hasFinancialKey && !financialKey) {
+          setFinancialKey(data.financialKey);
+        }
+      })
+      .catch(console.error);
+  }, [openAIKey, financialKey]);
 
   const handleSave = async () => {
     try {
       setIsLoading(true);
       setOpenAIError('');
 
-      const { isValid, error } = await validateOpenAIKey(openAIKey);
-      
-      if (!isValid) {
-        setOpenAIError(error ?? 'Invalid OpenAI API key');
-        return;
+      // Skip validation if server keys are configured
+      if (!serverKeys?.hasInferenceKey && !serverKeys?.hasOpenAIKey) {
+        const { isValid, error } = await validateOpenAIKey(openAIKey);
+        
+        if (!isValid) {
+          setOpenAIError(error ?? 'Invalid OpenAI API key');
+          return;
+        }
       }
 
       await Promise.all([
@@ -69,7 +91,7 @@ export function ApiKeysModal({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <label htmlFor="openai-key" className="text-sm font-medium">
-              OpenAI API Key
+              OpenAI API Key {serverKeys?.hasInferenceKey && <span className="text-green-600">(Using Heroku Inference)</span>}
             </label>
             <div className="relative">
               <Input
@@ -77,7 +99,8 @@ export function ApiKeysModal({
                 type={showOpenAIKey ? "text" : "password"}
                 value={openAIKey}
                 onChange={(e) => setOpenAIKey(e.target.value)}
-                placeholder="sk-..."
+                placeholder={serverKeys?.hasInferenceKey ? "Using server-configured key" : "sk-..."}
+                disabled={serverKeys?.hasInferenceKey}
               />
               <button
                 type="button"
@@ -93,20 +116,26 @@ export function ApiKeysModal({
               </p>
             )}
             <p className="text-xs text-muted-foreground">
-              Get your API key from{' '}
-              <a 
-                href="https://platform.openai.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                platform.openai.com
-              </a>
+              {serverKeys?.hasInferenceKey ? (
+                "✅ API key is configured on the server using Heroku Inference"
+              ) : (
+                <>
+                  Get your API key from{' '}
+                  <a 
+                    href="https://platform.openai.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    platform.openai.com
+                  </a>
+                </>
+              )}
             </p>
           </div>
           <div className="space-y-2">
             <label htmlFor="financial-key" className="text-sm font-medium">
-              Financial Datasets API Key
+              Financial Datasets API Key {serverKeys?.hasFinancialKey && <span className="text-green-600">(Configured)</span>}
             </label>
             <div className="relative">
               <Input
@@ -114,7 +143,8 @@ export function ApiKeysModal({
                 type={showFinancialKey ? "text" : "password"}
                 value={financialKey}
                 onChange={(e) => setFinancialKey(e.target.value)}
-                placeholder="Enter your Financial Datasets API key"
+                placeholder={serverKeys?.hasFinancialKey ? "Using server-configured key" : "Enter your Financial Datasets API key"}
+                disabled={serverKeys?.hasFinancialKey}
               />
               <button
                 type="button"
@@ -125,15 +155,21 @@ export function ApiKeysModal({
               </button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Get your API key from{' '}
-              <a 
-                href="https://financialdatasets.ai" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                financialdatasets.ai
-              </a>
+              {serverKeys?.hasFinancialKey ? (
+                "✅ API key is configured on the server"
+              ) : (
+                <>
+                  Get your API key from{' '}
+                  <a 
+                    href="https://financialdatasets.ai" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    financialdatasets.ai
+                  </a>
+                </>
+              )}
             </p>
           </div>
         </div>
