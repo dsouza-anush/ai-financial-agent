@@ -151,7 +151,7 @@ export async function POST(request: Request) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
 
           // save the response
-          if (session.user?.id) {
+          if (session?.user?.id || userId) {
             try {
               const responseMessagesWithoutIncompleteToolCalls = sanitizeResponseMessages(response.messages);
 
