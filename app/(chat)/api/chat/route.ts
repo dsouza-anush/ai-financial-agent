@@ -138,8 +138,8 @@ export async function POST(request: Request) {
 
       const result = streamText({
         model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
-        tools: financialToolsManager.getTools(),
-        system: systemPrompt,
+        // tools: financialToolsManager.getTools(), // Temporarily disabled to isolate streaming issue
+        system: "You are a helpful assistant. Answer questions clearly and concisely.",
         messages: coreMessages,
         maxSteps: 10,
         onChunk: (event) => {
