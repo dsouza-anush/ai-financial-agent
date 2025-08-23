@@ -87,7 +87,10 @@ export async function POST(request: Request) {
   const chat = await getChatById({ id });
 
   if (!chat) {
-    const title = await generateTitleFromUserMessage({ message: userMessage, modelApiKey });
+    const title = await generateTitleFromUserMessage({ 
+      message: userMessage, 
+      modelApiKey: modelApiKey || herokuInferenceApiKey || 'default' 
+    });
     await saveChat({ id, userId: session.user.id, title });
   }
 
