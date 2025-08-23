@@ -26,6 +26,30 @@ export class FinancialToolsManager {
     this.config = config;
   }
 
+  private async fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 10000): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          'X-API-KEY': this.config.financialDatasetsApiKey,
+          ...options.headers
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return response;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   private shouldExecuteToolCall(toolName: string, params: any): boolean {
     const key = JSON.stringify({ toolName, params });
     if (this.toolCallCache.has(key)) {
@@ -44,13 +68,14 @@ export class FinancialToolsManager {
           limit: z.number().optional().default(5).describe('The number of news articles to return'),
         }),
         execute: async ({ ticker, limit }: { ticker: string; limit?: number }) => {
-          const response = await fetch(`https://api.financialdatasets.ai/news/?ticker=${ticker}&limit=${limit}`, {
-            headers: {
-              'X-API-Key': this.config.financialDatasetsApiKey
-            }
-          });
-          const data = await response.json();
-          return data;
+          try {
+            const response = await this.fetchWithTimeout(`https://api.financialdatasets.ai/news/?ticker=${ticker}&limit=${limit}`);
+            const data = await response.json();
+            return data;
+          } catch (error) {
+            console.error('Error fetching news:', error);
+            return { error: 'Failed to fetch news data' };
+          }
         },
       },
       getStockPrices: {
@@ -80,37 +105,34 @@ export class FinancialToolsManager {
             return null;
           }
 
-          // First, get snapshot price
-          const snapshotResponse = await fetch(`https://api.financialdatasets.ai/prices/snapshot?ticker=${ticker}`, {
-            headers: {
-              'X-API-Key': this.config.financialDatasetsApiKey
-            }
-          });
-          const snapshotData = await snapshotResponse.json();
+          try {
+            // First, get snapshot price
+            const snapshotResponse = await this.fetchWithTimeout(`https://api.financialdatasets.ai/prices/snapshot/?ticker=${ticker}`);
+            const snapshotData = await snapshotResponse.json();
 
-          // Then, get historical prices
-          const urlParams = new URLSearchParams({
-            ticker: ticker,
-            start_date: start_date || '',
-            end_date: end_date || '',
-            interval: interval || 'day',
-            interval_multiplier: (interval_multiplier || 1).toString(),
-          });
-          
-          const historicalPricesResponse = await fetch(`https://api.financialdatasets.ai/prices/?${urlParams}`, {
-            headers: {
-              'X-API-Key': this.config.financialDatasetsApiKey
-            }
-          });
-          const historicalPricesData = await historicalPricesResponse.json();
+            // Then, get historical prices
+            const urlParams = new URLSearchParams({
+              ticker: ticker,
+              start_date: start_date || '',
+              end_date: end_date || '',
+              interval: interval || 'day',
+              interval_multiplier: (interval_multiplier || 1).toString(),
+            });
+            
+            const historicalPricesResponse = await this.fetchWithTimeout(`https://api.financialdatasets.ai/prices/?${urlParams}`);
+            const historicalPricesData = await historicalPricesResponse.json();
 
-          // Combine snapshot price with historical prices
-          const combinedData = {
-            ticker: ticker,
-            snapshot: snapshotData,
-            historical: historicalPricesData
-          };
-          return combinedData;
+            // Combine snapshot price with historical prices
+            const combinedData = {
+              ticker: ticker,
+              snapshot: snapshotData,
+              historical: historicalPricesData
+            };
+            return combinedData;
+          } catch (error) {
+            console.error('Error fetching stock prices:', error);
+            return { error: 'Failed to fetch stock price data' };
+          }
         },
       },
       getIncomeStatements: {
@@ -140,13 +162,14 @@ export class FinancialToolsManager {
           if (report_period_lte) params.append('report_period_lte', report_period_lte);
           if (report_period_gte) params.append('report_period_gte', report_period_gte);
 
-          const response = await fetch(`https://api.financialdatasets.ai/financials/income-statements/?${params}`, {
-            headers: {
-              'X-API-Key': this.config.financialDatasetsApiKey
-            }
-          });
-          const data = await response.json();
-          return data;
+          try {
+            const response = await this.fetchWithTimeout(`https://api.financialdatasets.ai/financials/income-statements/?${params}`);
+            const data = await response.json();
+            return data;
+          } catch (error) {
+            console.error('Error fetching income statements:', error);
+            return { error: 'Failed to fetch income statements data' };
+          }
         },
       },
       getBalanceSheets: {
@@ -175,13 +198,14 @@ export class FinancialToolsManager {
           if (report_period_lte) params.append('report_period_lte', report_period_lte);
           if (report_period_gte) params.append('report_period_gte', report_period_gte);
 
-          const response = await fetch(`https://api.financialdatasets.ai/financials/balance-sheets/?${params}`, {
-            headers: {
-              'X-API-Key': this.config.financialDatasetsApiKey
-            }
-          });
-          const data = await response.json();
-          return data;
+          try {
+            const response = await this.fetchWithTimeout(`https://api.financialdatasets.ai/financials/balance-sheets/?${params}`);
+            const data = await response.json();
+            return data;
+          } catch (error) {
+            console.error('Error fetching balance sheets:', error);
+            return { error: 'Failed to fetch balance sheets data' };
+          }
         },
       },
       getCashFlowStatements: {
@@ -210,13 +234,14 @@ export class FinancialToolsManager {
           if (report_period_lte) params.append('report_period_lte', report_period_lte);
           if (report_period_gte) params.append('report_period_gte', report_period_gte);
 
-          const response = await fetch(`https://api.financialdatasets.ai/financials/cash-flow-statements/?${params}`, {
-            headers: {
-              'X-API-Key': this.config.financialDatasetsApiKey
-            }
-          });
-          const data = await response.json();
-          return data;
+          try {
+            const response = await this.fetchWithTimeout(`https://api.financialdatasets.ai/financials/cash-flow-statements/?${params}`);
+            const data = await response.json();
+            return data;
+          } catch (error) {
+            console.error('Error fetching cash flow statements:', error);
+            return { error: 'Failed to fetch cash flow statements data' };
+          }
         },
       },
       getFinancialMetrics: {
@@ -244,13 +269,14 @@ export class FinancialToolsManager {
           if (limit) params.append('limit', limit.toString());
           if (report_period_lte) params.append('report_period_lte', report_period_lte);
           if (report_period_gte) params.append('report_period_gte', report_period_gte);
-          const response = await fetch(`https://api.financialdatasets.ai/financial-metrics/?${params}`, {
-            headers: {
-              'X-API-Key': this.config.financialDatasetsApiKey
-            }
-          });
-          const data = await response.json();
-          return data;
+          try {
+            const response = await this.fetchWithTimeout(`https://api.financialdatasets.ai/financial-metrics/?${params}`);
+            const data = await response.json();
+            return data;
+          } catch (error) {
+            console.error('Error fetching financial metrics:', error);
+            return { error: 'Failed to fetch financial metrics data' };
+          }
         },
       },
       searchStocksByFilters: {
@@ -296,26 +322,16 @@ export class FinancialToolsManager {
             limit: limit ?? 5,
           };
 
-          const response = await fetch('https://api.financialdatasets.ai/financials/search/', {
-            method: 'POST',
-            headers: {
-              'X-API-Key': this.config.financialDatasetsApiKey,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('API Error:', {
-              status: response.status,
-              statusText: response.statusText,
-              body: errorText
+          try {
+            const response = await this.fetchWithTimeout('https://api.financialdatasets.ai/financials/search/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(body)
             });
-            throw new Error(`API error: ${response.status} ${errorText}`);
-          }
 
-          const data = await response.json();
+            const data = await response.json();
 
           this.config.dataStream.writeData({
             type: 'tool-loading',
@@ -326,7 +342,11 @@ export class FinancialToolsManager {
             }
           });
 
-          return data;
+            return data;
+          } catch (error) {
+            console.error('Error searching stocks by filters:', error);
+            return { error: 'Failed to search stocks by filters' };
+          }
         },
       },
     };
