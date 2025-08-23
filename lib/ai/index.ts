@@ -1,3 +1,4 @@
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createOpenAI } from '@ai-sdk/openai';
 import { experimental_wrapLanguageModel as wrapLanguageModel } from 'ai';
 
@@ -9,13 +10,13 @@ export const customModel = (apiIdentifier: string, openAIApiKey?: string, heroku
   const inferenceUrl = process.env.INFERENCE_URL || 'https://us.inference.heroku.com';
   
   if (inferenceKey) {
-    const provider = createOpenAI({
-      apiKey: inferenceKey,
+    const provider = createOpenAICompatible({
+      name: 'heroku',
       baseURL: `${inferenceUrl}/v1`,
-      compatibility: 'strict'
+      apiKey: inferenceKey,
     });
     return wrapLanguageModel({
-      model: provider.chat(apiIdentifier),
+      model: provider(apiIdentifier),
       middleware: customMiddleware,
     });
   }
