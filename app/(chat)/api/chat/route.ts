@@ -186,7 +186,7 @@ export async function POST(request: Request) {
 
       const result = streamText({
         model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
-        // tools: financialToolsManager.getTools(), // Temporarily disabled for testing
+        tools: financialToolsManager.getTools(),
         system: systemPrompt,
         messages: coreMessagesWithTaskNames,
         maxSteps: 10,

@@ -4,7 +4,6 @@ import { AuthCheck } from '@/app/components/AuthCheck';
 
 import { ThemeProvider } from '@/components/providers';
 import { SessionProvider } from 'next-auth/react';
-import { Analytics } from "@vercel/analytics/react"
 
 import './globals.css';
 
@@ -75,7 +74,6 @@ export default function RootLayout({
             <Toaster position="top-center" />
             {children}
           </ThemeProvider>
-          <Analytics />
         </SessionProvider>
       </body>
     </html>
