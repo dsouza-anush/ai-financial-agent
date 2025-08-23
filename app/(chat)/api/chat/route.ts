@@ -122,44 +122,8 @@ export async function POST(request: Request) {
         }
       });
 
-      const { object } = await generateObject({
-        model: customModel('claude-4-sonnet', modelApiKey, herokuInferenceApiKey),
-        output: 'array',
-        schema: z.object({
-          task_name: z.string(),
-          class: z
-            .string()
-            .describe('The name of the sub-task'),
-        }),
-        prompt: `You are a financial reasoning agent.  
-        Given the following user query: ${userMessage.content}, 
-        break it down to small, tightly-scoped sub-tasks 
-        that need to be taken to answer the query.  
-        
-        Your task breakdown should:
-        - Be comprehensive and cover all aspects needed to fully answer the query
-        - Follow a logical research sequence from basic information to deeper analysis
-        - Include 1-3 tasks maximum - fewer is better as long as they cover the complete question
-        - Prioritize the most essential research steps and consolidate similar actions
-        - Start with gathering fundamental data before moving to analysis and comparison
-        - Make thought processes transparent to users who will see these tasks
-        - Show a clear progression of reasoning that builds toward the answer
-        
-        Format requirements:
-        - Include the ticker or company name where appropriate
-        - Use present progressive tense (e.g., "Analyzing", "Retrieving", "Comparing")
-        - Keep task names short (3-7 words) but specific and informative
-        - Make tasks distinct with no overlap or redundancy
-        - Begin with data collection tasks, then move to analysis tasks
-        
-        Your output will guide another LLM in executing these tasks, and users will see these steps as the system works.
-        Ensure tasks are optimally structured for the available financial tools and clearly communicate the research approach.
-        Focus on minimizing the number of steps while maintaining comprehensiveness.
-        
-        Examples of good task sequences:
-        - "Retrieving AAPL financials", "Analyzing AAPL performance trends" 
-        - "Finding top tech stocks", "Evaluating financial health"`,
-      });
+      // Skip task breakdown for now to test basic functionality
+      const object = [{ task_name: 'Analyzing your query', class: 'analysis' }];
 
       // Stream the tasks in the query loading state
       dataStream.writeData({
@@ -172,23 +136,11 @@ export async function POST(request: Request) {
 
       let receivedFirstChunk = false;
 
-      // Create a transient version of coreMessages with task names
-      const coreMessagesWithTaskNames = [...coreMessages];
-      // Replace the last user message content with task names
-      const lastMessage = coreMessagesWithTaskNames[coreMessagesWithTaskNames.length - 1];
-      if (coreMessagesWithTaskNames.length > 0 && lastMessage?.role === 'user') {
-        const taskList = object.map(task => task.task_name).join('\n');
-        coreMessagesWithTaskNames[coreMessagesWithTaskNames.length - 1] = {
-          role: 'user',
-          content: taskList
-        };
-      }
-
       const result = streamText({
         model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
         tools: financialToolsManager.getTools(),
         system: systemPrompt,
-        messages: coreMessagesWithTaskNames,
+        messages: coreMessages,
         maxSteps: 10,
         onChunk: (event) => {
           const isToolCall = event.chunk.type === 'tool-call';
