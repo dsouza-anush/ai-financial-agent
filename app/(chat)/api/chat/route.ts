@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     execute: async (dataStream) => {
       // Initialize the financial tools manager
       const financialToolsManager = new FinancialToolsManager({
-        financialDatasetsApiKey: financialDatasetsApiKey!,
+        financialDatasetsApiKey: financialDatasetsApiKey || process.env.FINANCIAL_DATASETS_API_KEY!,
         dataStream,
       });
       dataStream.writeData({
@@ -186,7 +186,7 @@ export async function POST(request: Request) {
 
       const result = streamText({
         model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
-        tools: financialToolsManager.getTools(),
+        // tools: financialToolsManager.getTools(), // Temporarily disabled for testing
         system: systemPrompt,
         messages: coreMessagesWithTaskNames,
         maxSteps: 10,
