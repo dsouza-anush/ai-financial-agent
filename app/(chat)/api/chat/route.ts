@@ -125,69 +125,85 @@ export async function POST(request: Request) {
 
       let receivedFirstChunk = false;
 
-      const result = streamText({
+      // Use generateText instead of streamText to avoid AI SDK streaming bugs
+      console.log('Using generateText approach to avoid streaming issues...');
+      
+      const { generateText } = await import('ai');
+      const response = await generateText({
         model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
         tools: financialToolsManager.getTools(),
         system: systemPrompt,
         messages: coreMessages,
         maxSteps: 10,
-        onChunk: (event) => {
-          const isToolCall = event.chunk.type === 'tool-call';
-          if (!receivedFirstChunk && !isToolCall) {
-            receivedFirstChunk = true;
-            // Set query-loading to false on first token
-            dataStream.writeData({
-              type: 'query-loading',
-              content: {
-                isLoading: false,
-                taskNames: []
-              }
-            });
-          }
-        },
-        onFinish: async ({ response }) => {
-          // CAUTION: this is a hack to prevent stream from being cut off :(
-          // TODO: find a better solution
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-
-          // save the response
-          if (session?.user?.id || userId) {
-            try {
-              const responseMessagesWithoutIncompleteToolCalls = sanitizeResponseMessages(response.messages);
-
-              if (responseMessagesWithoutIncompleteToolCalls.length > 0) {
-                await saveMessages({
-                  messages: responseMessagesWithoutIncompleteToolCalls.map(
-                    (message) => {
-                      const messageId = generateUUID();
-
-                      if (message.role === 'assistant') {
-                        dataStream.writeMessageAnnotation({
-                          messageIdFromServer: messageId,
-                        });
-                      }
-
-                      return {
-                        id: messageId,
-                        chatId: id,
-                        role: message.role,
-                        content: message.content,
-                        createdAt: new Date(),
-                      };
-                    },
-                  ),
-                });
-              } else {
-                console.log('No valid messages to save');
-              }
-            } catch (error) {
-              console.error('Failed to save chat:', error);
-            }
-          }
-        },
       });
 
-      result.mergeIntoDataStream(dataStream);
+      console.log('GenerateText completed, response length:', response.text?.length || 0);
+
+      // Set query-loading to false
+      dataStream.writeData({
+        type: 'query-loading',
+        content: {
+          isLoading: false,
+          taskNames: []
+        }
+      });
+
+      // Write the response as a single chunk
+      dataStream.writeData({
+        type: 'text-delta',
+        content: response.text,
+      });
+
+      // Finish the response
+      dataStream.writeData({
+        type: 'finish',
+        content: {
+          finishReason: 'stop',
+          usage: response.usage,
+        }
+      });
+
+      // Save the response
+      if (session?.user?.id || userId) {
+        try {
+          const responseMessages = response.responseMessages || [
+            {
+              role: 'assistant' as const,
+              content: response.text,
+            }
+          ];
+          
+          const responseMessagesWithoutIncompleteToolCalls = sanitizeResponseMessages(responseMessages);
+
+          if (responseMessagesWithoutIncompleteToolCalls.length > 0) {
+            await saveMessages({
+              messages: responseMessagesWithoutIncompleteToolCalls.map(
+                (message) => {
+                  const messageId = generateUUID();
+
+                  if (message.role === 'assistant') {
+                    dataStream.writeMessageAnnotation({
+                      messageIdFromServer: messageId,
+                    });
+                  }
+
+                  return {
+                    id: messageId,
+                    chatId: id,
+                    role: message.role,
+                    content: message.content,
+                    createdAt: new Date(),
+                  };
+                },
+              ),
+            });
+          } else {
+            console.log('No valid messages to save');
+          }
+        } catch (error) {
+          console.error('Failed to save chat:', error);
+        }
+      }
     },
   });
 }
