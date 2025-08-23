@@ -114,23 +114,12 @@ export async function POST(request: Request) {
         content: userMessageId,
       });
 
+      // Start with loading, will be set to false on first chunk
       dataStream.writeData({
         type: 'query-loading',
         content: {
           isLoading: true,
-          taskNames: []
-        }
-      });
-
-      // Skip task breakdown for now to test basic functionality
-      const object = [{ task_name: 'Analyzing your query', class: 'analysis' }];
-
-      // Stream the tasks in the query loading state
-      dataStream.writeData({
-        type: 'query-loading',
-        content: {
-          isLoading: true,
-          taskNames: object.map(task => task.task_name)
+          taskNames: ['Processing your request']
         }
       });
 
@@ -138,8 +127,8 @@ export async function POST(request: Request) {
 
       const result = streamText({
         model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
-        // tools: financialToolsManager.getTools(), // Temporarily disabled to isolate streaming issue
-        system: "You are a helpful assistant. Answer questions clearly and concisely.",
+        tools: financialToolsManager.getTools(),
+        system: systemPrompt,
         messages: coreMessages,
         maxSteps: 10,
         onChunk: (event) => {
