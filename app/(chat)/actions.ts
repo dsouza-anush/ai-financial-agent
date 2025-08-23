@@ -25,7 +25,7 @@ export async function generateTitleFromUserMessage({
 }) {
   const herokuInferenceApiKey = process.env.INFERENCE_KEY;
   const { text: title } = await generateText({
-    model: customModel('gpt-4.1-mini-2025-04-14', modelApiKey, herokuInferenceApiKey),
+    model: customModel('claude-4-sonnet', modelApiKey, herokuInferenceApiKey),
     system: `\n
     - you will generate a short title based on the first message a user begins a conversation with
     - ensure it is not more than 30 characters long

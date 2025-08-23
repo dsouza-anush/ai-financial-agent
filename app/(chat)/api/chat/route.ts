@@ -123,7 +123,7 @@ export async function POST(request: Request) {
       });
 
       const { object } = await generateObject({
-        model: customModel('gpt-4.1-nano-2025-04-14', modelApiKey, herokuInferenceApiKey),
+        model: customModel('claude-4-sonnet', modelApiKey, herokuInferenceApiKey),
         output: 'array',
         schema: z.object({
           task_name: z.string(),
