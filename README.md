@@ -1,7 +1,10 @@
 # AI Financial Agent 🤖
-This is a proof of conncept AI financial agent.  The goal of this project is to explore the use of AI for investment research.  This project is for **educational** purposes only and is not intended for real trading or investment.
 
-👋 **Demo**: You can use a live demo of this project [here](https://chat.financialdatasets.ai/).
+🚨 **CURRENT STATUS: BROKEN - See CURRENT_STATUS.md**
+
+This is a proof of concept AI financial agent adapted for Heroku deployment with Claude 4 Sonnet. The goal is to explore AI for investment research. This project is for **educational** purposes only.
+
+⚠️ **Important:** The application is currently not working for end users - chat responses hang on "Processing your request".
 
 <img width="1709" alt="Screenshot 2025-01-06 at 5 53 59 PM" src="https://github.com/user-attachments/assets/7ef1729b-f2e1-477c-99e2-1184c1bfa1cd" />
 
@@ -17,23 +20,39 @@ This project is for **educational and research purposes only**.
 
 By using this software, you agree to use it solely for learning purposes.
 
-## Table of Contents 📖
-- [Features](#features)
-- [Setup](#setup)
-- [Run the Agent](#run-the-agent)
-- [Financial Data API](#financial-data-api)
-- [Deploy Your Own Agent](#deploy-your-own-agent)
+## 🚨 Read Before Working on This
 
-## Features
-- [AI Financial Agent](https://chat.financialdatasets.ai)
-  - Productized version of this project
-  - Chat assistant for financial research, stock analysis, and more
-  - Uses generative UI to display stock prices, fundamentals, and more
-- [Financial Datasets API](https://financialdatasets.ai)
-  - Access to real-time and historical stock market data
-  - Data is optimized for AI financial agents
-  - 30+ years of financial data with 100% market coverage
-  - Documentation available [here](https://docs.financialdatasets.ai)
+**The application is currently broken.** Before making any changes:
+
+1. **Read [`CURRENT_STATUS.md`](./CURRENT_STATUS.md)** - Detailed analysis of what's broken
+2. **Follow [`DEBUGGING_GUIDE.md`](./DEBUGGING_GUIDE.md)** - How to properly test and fix
+3. **Current Deployment:** https://ai-financial-agent-demo-0b9a1e91c541.herokuapp.com/ (appears to work but doesn't)
+
+## Table of Contents 📖
+- [Current Issues](#current-issues)
+- [Setup](#setup)
+- [Known Problems](#known-problems)
+- [Heroku Deployment](#heroku-deployment)
+
+## Current Issues
+
+### ❌ What's Broken
+- **Streaming responses hang** on "Processing your request"
+- **End-to-end user flow fails** - users cannot get AI responses
+- **API testing fails** - cannot successfully test chat endpoints
+
+### ✅ What Works
+- Application deploys successfully to Heroku
+- UI loads properly with clean interface
+- Individual APIs work (AI, Financial Data, Database)
+- Authentication system functional
+
+### 🔧 Technical Stack
+- **AI Model:** Claude 4 Sonnet via Heroku Inference API
+- **Framework:** Next.js 15.0.3-canary.2
+- **Database:** PostgreSQL with Drizzle ORM
+- **Deployment:** Heroku
+- **Financial Data:** Financial Datasets API
 
 ## Setup
 
@@ -60,53 +79,88 @@ pnpm install
 cp .env.example .env
 ```
 
-Set the API keys in the .env file:
-```
-# Get your OpenAI API key from https://platform.openai.com/
-OPENAI_API_KEY=your-openai-api-key
+Set the API keys in the .env.local file (for Heroku deployment):
+```bash
+# Heroku Inference API (replaces OpenAI)
+INFERENCE_KEY=your-heroku-inference-key
 
-# Get your Financial Datasets API key from https://financialdatasets.ai/
+# Financial Datasets API
 FINANCIAL_DATASETS_API_KEY=your-financial-datasets-api-key
 
-# Get your LangSmith API key from https://smith.langchain.com/
-LANGCHAIN_API_KEY=your-langsmith-api-key
-LANGCHAIN_TRACING_V2=true
-LANGCHAIN_PROJECT=ai-financial-agent
+# Authentication
+AUTH_SECRET=your-auth-secret
+AUTH_TRUST_HOST=true
+
+# Database (Heroku PostgreSQL)
+DATABASE_URL=your-postgres-url
+
+# Development only
+NODE_TLS_REJECT_UNAUTHORIZED=0
 ```
 
 **Important**: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various OpenAI and authentication provider accounts.
 
-## Run the Agent
+## Known Problems
 
-After completing the steps above, simply run the following command to start the development server:
+⚠️ **Before running locally, understand that this application currently doesn't work.**
+
 ```bash
-pnpm dev
+npm run dev
+# Visit http://localhost:3000
+# Try asking "What is the current price of Apple?"
+# Expected: Gets stuck on "Processing your request" (broken)
 ```
 
-Your app template should now be running on [localhost:3000](http://localhost:3000/).
+### Issue Root Cause
+The streaming response mechanism in `/api/chat/route.ts` is not working properly. Individual components work:
+- ✅ Heroku Inference API responds correctly
+- ✅ Financial Datasets API returns real data  
+- ✅ Database connections work
+- ❌ **Streaming integration fails in the web application**
 
-## Financial Data API
+## Heroku Deployment
 
-This template uses the [Financial Datasets API](https://financialdatasets.ai) as the financial data provider.  The Financial Datasets API is specifically designed for AI financial agents and LLMs.
+**Current Deployment:** https://ai-financial-agent-demo-0b9a1e91c541.herokuapp.com/
 
-The Financial Datasets API provides real-time and historical stock market data and covers 100% of the US market over the past 30 years.  
+### Heroku Setup
+```bash
+# Connect to existing Heroku app
+heroku git:remote -a ai-financial-agent-demo
 
-Data includes financial statements, stock prices, options data, insider trades, institutional ownership, and much more.  You can learn more about the API via the documentation [here](https://docs.financialdatasets.ai).
+# Check environment variables
+heroku config
 
-**Note**: Data is free for AAPL, GOOGL, MSFT, NVDA, and TSLA.
+# Deploy changes  
+git push heroku main
 
-If you do not want to use the Financial Datasets API, you can easily switch to another data provider by modifying a few lines of code.
+# View logs
+heroku logs --tail
+```
 
-## Deploy Your Own Agent
+### Environment Variables Set
+- `INFERENCE_KEY`: Heroku Inference API key
+- `FINANCIAL_DATASETS_API_KEY`: Financial data access
+- `DATABASE_URL`: PostgreSQL connection
+- `AUTH_SECRET`: NextAuth.js secret
 
-You can deploy your own version of the AI Financial Agent in production via Vercel with one click:
+**Note:** App deploys successfully but user experience is broken.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvirattt%2Fai-financial-agent&env=AUTH_SECRET,OPENAI_API_KEY&envDescription=Learn%20more%20about%20how%20to%20get%20the%20API%20Keys%20for%20the%20application&envLink=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-financial-agent%2Fblob%2Fmain%2F.env.example&demo-title=AI%20Financial%20Agent&demo-description=An%20open-source%20financial%20agent%20chat%20template%20built%20with%20the%20AI%20SDK%20by%20Vercel%20and%20Financial%20Datasets%20API.&demo-url=https%3A%2F%2Fchat.vercel.ai&stores=[{%22type%22:%22postgres%22},{%22type%22:%22blob%22}])
+## Development Commands
 
-If you want to deploy your own version of the AI Financial Agent in production, you need to link your local instance with your Vercel and GitHub accounts.
+```bash
+npm run dev          # Start development (currently broken)
+npm run build        # Build for production
+npm run lint         # Run linting  
+npm run db:studio    # Database management
+```
 
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
+## For Next Developer
+
+**Critical:** Don't assume previous "fixes" worked. The application:
+1. ✅ Deploys without errors
+2. ✅ Loads the UI properly  
+3. ❌ **Doesn't work for actual users**
+
+Read the documentation files created to understand the full scope of the problem before attempting fixes.
 
 
