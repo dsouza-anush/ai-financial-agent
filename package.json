@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "npx drizzle-kit generate && tsx lib/db/migrate.ts && next build",
+    "build": "next build",
     "start": "next start",
     "heroku-prebuild": "npm install --legacy-peer-deps",
     "lint": "next lint && biome lint --write --unsafe",
