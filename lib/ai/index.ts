@@ -1,19 +1,18 @@
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createOpenAI } from '@ai-sdk/openai';
 import type { LanguageModelV1 } from 'ai';
 
 export const customModel = (apiIdentifier: string, openAIApiKey?: string, herokuInferenceApiKey?: string): LanguageModelV1 => {
-  // Always use Heroku Inference API when available
+  // Always use Heroku Inference API when available - use OpenAI provider with custom base URL
   const inferenceKey = herokuInferenceApiKey || process.env.INFERENCE_KEY;
   const inferenceUrl = process.env.INFERENCE_URL || 'https://us.inference.heroku.com';
   
   if (inferenceKey) {
-    const provider = createOpenAICompatible({
-      name: 'heroku',
-      baseURL: `${inferenceUrl}/v1`,
+    const provider = createOpenAI({
       apiKey: inferenceKey,
+      baseURL: `${inferenceUrl}/v1`,
+      compatibility: 'strict'
     });
-    return provider(apiIdentifier) as unknown as LanguageModelV1;
+    return provider.chat(apiIdentifier);
   }
   
   // Only use OpenAI as absolute fallback if no Heroku Inference available
