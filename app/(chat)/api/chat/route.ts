@@ -54,7 +54,7 @@ export async function POST(request: Request) {
   } = await request.json();
 
   // Get Heroku Inference API key from environment if available
-  const herokuInferenceApiKey = process.env.HEROKU_INFERENCE_API_KEY;
+  const herokuInferenceApiKey = process.env.INFERENCE_KEY;
 
   const session = await auth();
 

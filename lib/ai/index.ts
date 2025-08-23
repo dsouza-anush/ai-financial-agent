@@ -6,9 +6,10 @@ import { customMiddleware } from './custom-middleware';
 export const customModel = (apiIdentifier: string, openAIApiKey?: string, herokuInferenceApiKey?: string) => {
   // Use Heroku Inference API for Claude models
   if (apiIdentifier.startsWith('claude-') && herokuInferenceApiKey) {
+    const inferenceUrl = process.env.INFERENCE_URL || 'https://us.inference.heroku.com';
     const provider = createOpenAI({
       apiKey: herokuInferenceApiKey,
-      baseURL: 'https://api.heroku.com/v1/inference',
+      baseURL: inferenceUrl,
       compatibility: 'strict'
     });
     return wrapLanguageModel({

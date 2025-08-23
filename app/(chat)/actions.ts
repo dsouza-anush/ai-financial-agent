@@ -23,7 +23,7 @@ export async function generateTitleFromUserMessage({
   message: CoreUserMessage;
   modelApiKey: string;
 }) {
-  const herokuInferenceApiKey = process.env.HEROKU_INFERENCE_API_KEY;
+  const herokuInferenceApiKey = process.env.INFERENCE_KEY;
   const { text: title } = await generateText({
     model: customModel('gpt-4.1-mini-2025-04-14', modelApiKey, herokuInferenceApiKey),
     system: `\n
