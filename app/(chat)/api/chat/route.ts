@@ -170,7 +170,7 @@ export async function POST(request: Request) {
       // Save the response
       if (session?.user?.id || userId) {
         try {
-          const responseMessages = response.responseMessages || [
+          const responseMessages = [
             {
               role: 'assistant' as const,
               content: response.text,
