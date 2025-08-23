@@ -14,10 +14,14 @@ export async function validateOpenAIKey(apiKey: string): Promise<ValidationResul
     // Check if this is a Heroku Inference key (starts with 'inf-')
     const isHerokuInference = apiKey.startsWith('inf-');
     
+    const baseURL = isHerokuInference 
+      ? `${process.env.INFERENCE_URL || 'https://us.inference.heroku.com'}/v1`
+      : undefined;
+    
     const openai = new OpenAI({ 
       apiKey, 
       dangerouslyAllowBrowser: true,
-      baseURL: isHerokuInference ? (process.env.INFERENCE_URL || 'https://us.inference.heroku.com') : undefined
+      baseURL
     });
     
     const list = await openai.models.list();
