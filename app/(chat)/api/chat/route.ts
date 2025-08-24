@@ -169,10 +169,13 @@ export async function POST(request: Request) {
         }
 
         // Write each text delta as it comes in
-        dataStream.writeData({
-          type: 'text-delta',
-          content: delta,
-        });
+        if (delta && delta.length > 0) {
+          console.log('Writing delta chunk, length:', delta.length);
+          dataStream.writeData({
+            type: 'text-delta',
+            content: delta,
+          });
+        }
       }
 
       const { usage, finishReason } = await result;
