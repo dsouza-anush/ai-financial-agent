@@ -9,6 +9,7 @@ import { z } from 'zod';
 
 import { auth } from '@/app/(auth)/auth';
 import { customModel } from '@/lib/ai';
+import { createHerokuProvider } from 'heroku-ai-provider';
 import { models } from '@/lib/ai/models';
 import {
   systemPrompt,
@@ -32,7 +33,6 @@ import {
   financialTools, 
   type AllowedTools 
 } from '@/lib/ai/tools/financial-tools';
-import { PromptBasedTools } from '@/lib/ai/prompt-tools';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -105,11 +105,12 @@ export async function POST(request: Request) {
 
   return createDataStreamResponse({
     execute: async (dataStream) => {
-      // Initialize prompt-based tools for Heroku API compatibility
-      const promptTools = new PromptBasedTools({
+      // Initialize the financial tools manager
+      const financialToolsManager = new FinancialToolsManager({
         financialDatasetsApiKey: financialDatasetsApiKey || process.env.FINANCIAL_DATASETS_API_KEY!,
         dataStream,
       });
+      
       dataStream.writeData({
         type: 'user-message-id',
         content: userMessageId,
@@ -124,38 +125,24 @@ export async function POST(request: Request) {
         }
       });
 
-      let receivedFirstChunk = false;
-
-      // Use generateText instead of streamText to avoid AI SDK streaming bugs
-      console.log('Using generateText approach to avoid streaming issues...');
+      // Use generateText with heroku-ai-provider for proper tool calling
+      console.log('Using heroku-ai-provider for native tool calling...');
       
       const { generateText } = await import('ai');
-      
-      // Use prompt-based tool calling approach for Heroku API compatibility
-      const enhancedSystemPrompt = promptTools.getEnhancedSystemPrompt(systemPrompt);
+      const heroku = createHerokuProvider({
+        chatApiKey: herokuInferenceApiKey,
+        chatBaseUrl: 'https://us.inference.heroku.com/v1/chat/completions'
+      });
       
       const response = await generateText({
-        model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
-        system: enhancedSystemPrompt,
+        model: heroku.chat(model.apiIdentifier),
+        system: systemPrompt,
         messages: coreMessages,
+        tools: financialToolsManager.getTools(),
         maxSteps: 10,
       });
 
-      console.log('Initial response received, checking for tool calls...');
-      
-      // Process any tool calls in the response
-      const finalResponseText = await promptTools.enhanceResponse(
-        response.text,
-        async (params) => {
-          return await generateText({
-            model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
-            ...params,
-            maxSteps: 5,
-          });
-        }
-      );
-
-      console.log('Final response ready, length:', finalResponseText?.length || 0);
+      console.log('GenerateText completed, response length:', response.text?.length || 0);
 
       // Set query-loading to false
       dataStream.writeData({
@@ -166,10 +153,10 @@ export async function POST(request: Request) {
         }
       });
 
-      // Write the enhanced response as a single chunk
+      // Write the response as a single chunk
       dataStream.writeData({
         type: 'text-delta',
-        content: finalResponseText,
+        content: response.text,
       });
 
       // Finish the response
@@ -187,7 +174,7 @@ export async function POST(request: Request) {
           const responseMessages = [
             {
               role: 'assistant' as const,
-              content: finalResponseText,
+              content: response.text,
             }
           ];
           
