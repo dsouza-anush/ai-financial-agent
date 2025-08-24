@@ -133,16 +133,18 @@ export async function POST(request: Request) {
         }
       });
 
-      // Use generateText with heroku-ai-provider for proper tool calling
-      console.log('Using heroku-ai-provider for native tool calling...');
+      // Use streamText with heroku-ai-provider for proper streaming tool calling
+      console.log('Using heroku-ai-provider for streaming tool calling...');
       
-      const { generateText } = await import('ai');
+      const { streamText } = await import('ai');
       const heroku = createHerokuProvider({
         chatApiKey: herokuInferenceApiKey,
         chatBaseUrl: 'https://us.inference.heroku.com/v1/chat/completions'
       });
       
-      const response = await generateText({
+      let receivedFirstChunk = false;
+      
+      const result = streamText({
         model: heroku.chat(model.apiIdentifier) as any, // Type assertion to resolve AI SDK version incompatibility
         system: systemPrompt,
         messages: coreMessages,
@@ -150,39 +152,49 @@ export async function POST(request: Request) {
         maxSteps: 10,
       });
 
-      console.log('GenerateText completed, response length:', response.text?.length || 0);
+      console.log('StreamText started...');
 
-      // Set query-loading to false
-      dataStream.writeData({
-        type: 'query-loading',
-        content: {
-          isLoading: false,
-          taskNames: []
+      for await (const delta of result.textStream) {
+        if (!receivedFirstChunk) {
+          console.log('First chunk received, setting loading to false');
+          // Set query-loading to false on first chunk
+          dataStream.writeData({
+            type: 'query-loading',
+            content: {
+              isLoading: false,
+              taskNames: []
+            }
+          });
+          receivedFirstChunk = true;
         }
-      });
 
-      // Write the response as a single chunk
-      dataStream.writeData({
-        type: 'text-delta',
-        content: response.text,
-      });
+        // Write each text delta as it comes in
+        dataStream.writeData({
+          type: 'text-delta',
+          content: delta,
+        });
+      }
+
+      const { usage, finishReason } = await result;
+      console.log('StreamText completed, finish reason:', finishReason);
 
       // Finish the response
       dataStream.writeData({
         type: 'finish',
         content: {
-          finishReason: 'stop',
-          usage: response.usage,
+          finishReason: finishReason,
+          usage: usage,
         }
       });
 
       // Save the response
       if (session?.user?.id || userId) {
         try {
+          const fullText = await result.text;
           const responseMessages = [
             {
               role: 'assistant' as const,
-              content: response.text,
+              content: fullText,
             }
           ];
           
