@@ -178,15 +178,15 @@ export async function POST(request: Request) {
         }
       }
 
-      const { usage, finishReason } = await result;
-      console.log('StreamText completed, finish reason:', finishReason);
+      const finalResult = await result;
+      console.log('StreamText completed, finish reason:', finalResult.finishReason);
 
       // Finish the response
       dataStream.writeData({
         type: 'finish',
         content: {
-          finishReason: finishReason,
-          usage: usage,
+          finishReason: finalResult.finishReason,
+          usage: finalResult.usage,
         }
       });
 
