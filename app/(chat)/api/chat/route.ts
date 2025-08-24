@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   const session = await auth();
 
   // Create fake session for testing if no real session
-  const userId = session?.user?.id || 'test-user-id';
+  const userId = session?.user?.id || '00000000-0000-0000-0000-000000000000';
 
   const model = models.find((model) => model.id === modelId);
 
