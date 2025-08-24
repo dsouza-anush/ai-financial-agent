@@ -135,7 +135,7 @@ export async function POST(request: Request) {
       });
       
       const response = await generateText({
-        model: heroku.chat(model.apiIdentifier),
+        model: heroku.chat(model.apiIdentifier) as any, // Type assertion to resolve AI SDK version incompatibility
         system: systemPrompt,
         messages: coreMessages,
         tools: financialToolsManager.getTools(),
