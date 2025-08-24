@@ -78,25 +78,25 @@ Let me fetch the latest price data and market information for you..."`;
       
       switch (toolName) {
         case 'getStockPrices':
-          return await tools.getStockPrices.execute(args);
+          return await tools.getStockPrices.execute(args as any);
           
         case 'getNews':
-          return await tools.getNews.execute(args);
+          return await tools.getNews.execute(args as any);
           
         case 'getIncomeStatements':
-          return await tools.getIncomeStatements.execute(args);
+          return await tools.getIncomeStatements.execute(args as any);
           
         case 'getBalanceSheets':
-          return await tools.getBalanceSheets.execute(args);
+          return await tools.getBalanceSheets.execute(args as any);
           
         case 'getCashFlowStatements':
-          return await tools.getCashFlowStatements.execute(args);
+          return await tools.getCashFlowStatements.execute(args as any);
           
         case 'getFinancialMetrics':
-          return await tools.getFinancialMetrics.execute(args);
+          return await tools.getFinancialMetrics.execute(args as any);
           
         case 'searchStocksByFilters':
-          return await tools.searchStocksByFilters.execute(args);
+          return await tools.searchStocksByFilters.execute(args as any);
           
         default:
           console.error(`Unknown tool: ${toolName}`);
@@ -104,7 +104,7 @@ Let me fetch the latest price data and market information for you..."`;
       }
     } catch (error) {
       console.error(`Error executing tool ${toolName}:`, error);
-      return { error: `Failed to execute ${toolName}: ${error.message}` };
+      return { error: `Failed to execute ${toolName}: ${(error as Error).message}` };
     }
   }
 
