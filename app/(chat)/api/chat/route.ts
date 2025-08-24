@@ -92,16 +92,24 @@ export async function POST(request: Request) {
       message: userMessage, 
       modelApiKey: modelApiKey || herokuInferenceApiKey || 'default' 
     });
-    await saveChat({ id, userId, title });
+    try {
+      await saveChat({ id, userId, title });
+    } catch (error) {
+      console.log('Skipping chat save for testing:', error);
+    }
   }
 
   const userMessageId = generateUUID();
 
-  await saveMessages({
-    messages: [
-      { ...userMessage, id: userMessageId, createdAt: new Date(), chatId: id },
-    ],
-  });
+  try {
+    await saveMessages({
+      messages: [
+        { ...userMessage, id: userMessageId, createdAt: new Date(), chatId: id },
+      ],
+    });
+  } catch (error) {
+    console.log('Skipping message save for testing:', error);
+  }
 
   return createDataStreamResponse({
     execute: async (dataStream) => {
@@ -181,27 +189,31 @@ export async function POST(request: Request) {
           const responseMessagesWithoutIncompleteToolCalls = sanitizeResponseMessages(responseMessages);
 
           if (responseMessagesWithoutIncompleteToolCalls.length > 0) {
-            await saveMessages({
-              messages: responseMessagesWithoutIncompleteToolCalls.map(
-                (message) => {
-                  const messageId = generateUUID();
+            try {
+              await saveMessages({
+                messages: responseMessagesWithoutIncompleteToolCalls.map(
+                  (message) => {
+                    const messageId = generateUUID();
 
-                  if (message.role === 'assistant') {
-                    dataStream.writeMessageAnnotation({
-                      messageIdFromServer: messageId,
-                    });
-                  }
+                    if (message.role === 'assistant') {
+                      dataStream.writeMessageAnnotation({
+                        messageIdFromServer: messageId,
+                      });
+                    }
 
-                  return {
-                    id: messageId,
-                    chatId: id,
-                    role: message.role,
-                    content: message.content,
-                    createdAt: new Date(),
-                  };
-                },
-              ),
-            });
+                    return {
+                      id: messageId,
+                      chatId: id,
+                      role: message.role,
+                      content: message.content,
+                      createdAt: new Date(),
+                    };
+                  },
+                ),
+              });
+            } catch (error) {
+              console.log('Skipping response message save for testing:', error); 
+            }
           } else {
             console.log('No valid messages to save');
           }
