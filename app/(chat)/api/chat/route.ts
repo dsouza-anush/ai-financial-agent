@@ -32,6 +32,7 @@ import {
   financialTools, 
   type AllowedTools 
 } from '@/lib/ai/tools/financial-tools';
+import { PromptBasedTools } from '@/lib/ai/prompt-tools';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -104,8 +105,8 @@ export async function POST(request: Request) {
 
   return createDataStreamResponse({
     execute: async (dataStream) => {
-      // Initialize the financial tools manager
-      const financialToolsManager = new FinancialToolsManager({
+      // Initialize prompt-based tools for Heroku API compatibility
+      const promptTools = new PromptBasedTools({
         financialDatasetsApiKey: financialDatasetsApiKey || process.env.FINANCIAL_DATASETS_API_KEY!,
         dataStream,
       });
@@ -130,16 +131,31 @@ export async function POST(request: Request) {
       
       const { generateText } = await import('ai');
       
-      // Financial tools cause 500 errors with Heroku Inference API - keep disabled
+      // Use prompt-based tool calling approach for Heroku API compatibility
+      const enhancedSystemPrompt = promptTools.getEnhancedSystemPrompt(systemPrompt);
+      
       const response = await generateText({
         model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
-        // tools: financialToolsManager.getTools(),  // Disabled - causes server errors
-        system: systemPrompt + '\n\nNote: Financial data tools are temporarily unavailable. Please provide general financial guidance and direct users to check current market data from reliable financial sources.',
+        system: enhancedSystemPrompt,
         messages: coreMessages,
         maxSteps: 10,
       });
 
-      console.log('GenerateText completed, response length:', response.text?.length || 0);
+      console.log('Initial response received, checking for tool calls...');
+      
+      // Process any tool calls in the response
+      const finalResponseText = await promptTools.enhanceResponse(
+        response.text,
+        async (params) => {
+          return await generateText({
+            model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
+            ...params,
+            maxSteps: 5,
+          });
+        }
+      );
+
+      console.log('Final response ready, length:', finalResponseText?.length || 0);
 
       // Set query-loading to false
       dataStream.writeData({
@@ -150,10 +166,10 @@ export async function POST(request: Request) {
         }
       });
 
-      // Write the response as a single chunk
+      // Write the enhanced response as a single chunk
       dataStream.writeData({
         type: 'text-delta',
-        content: response.text,
+        content: finalResponseText,
       });
 
       // Finish the response
@@ -171,7 +187,7 @@ export async function POST(request: Request) {
           const responseMessages = [
             {
               role: 'assistant' as const,
-              content: response.text,
+              content: finalResponseText,
             }
           ];
           
