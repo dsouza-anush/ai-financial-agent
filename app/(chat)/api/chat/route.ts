@@ -130,11 +130,11 @@ export async function POST(request: Request) {
       
       const { generateText } = await import('ai');
       
-      // Re-enable financial tools to test if they work with generateText approach
+      // Financial tools still cause issues with Heroku Inference API - keep disabled for now
       const response = await generateText({
         model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
-        tools: financialToolsManager.getTools(),
-        system: systemPrompt,
+        // tools: financialToolsManager.getTools(),  // Disabled due to API compatibility issues
+        system: systemPrompt + '\n\nNote: Financial data tools are temporarily unavailable. Please provide general financial guidance and direct users to check current market data from reliable financial sources.',
         messages: coreMessages,
         maxSteps: 10,
       });
