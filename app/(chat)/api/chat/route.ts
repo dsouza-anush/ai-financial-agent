@@ -28,10 +28,10 @@ import {
 import { generateTitleFromUserMessage } from '../../actions';
 import { AISDKExporter } from 'langsmith/vercel';
 import { 
-  FinancialToolsManager, 
+  FinancialToolsManagerFixed, 
   financialTools, 
   type AllowedTools 
-} from '@/lib/ai/tools/financial-tools';
+} from '@/lib/ai/tools/financial-tools-fixed';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -104,8 +104,8 @@ export async function POST(request: Request) {
 
   return createDataStreamResponse({
     execute: async (dataStream) => {
-      // Initialize the financial tools manager
-      const financialToolsManager = new FinancialToolsManager({
+      // Initialize the fixed financial tools manager
+      const financialToolsManager = new FinancialToolsManagerFixed({
         financialDatasetsApiKey: financialDatasetsApiKey || process.env.FINANCIAL_DATASETS_API_KEY!,
         dataStream,
       });
@@ -130,11 +130,11 @@ export async function POST(request: Request) {
       
       const { generateText } = await import('ai');
       
-      // Financial tools still cause issues with Heroku Inference API - keep disabled for now
+      // Use fixed financial tools with proper JSON Schema format for Heroku Inference API
       const response = await generateText({
         model: customModel(model.apiIdentifier, modelApiKey, herokuInferenceApiKey),
-        // tools: financialToolsManager.getTools(),  // Disabled due to API compatibility issues
-        system: systemPrompt + '\n\nNote: Financial data tools are temporarily unavailable. Please provide general financial guidance and direct users to check current market data from reliable financial sources.',
+        tools: financialToolsManager.getTools(),
+        system: systemPrompt,
         messages: coreMessages,
         maxSteps: 10,
       });
