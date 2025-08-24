@@ -111,137 +111,76 @@ export async function POST(request: Request) {
     console.log('Skipping message save for testing:', error);
   }
 
-  return createDataStreamResponse({
-    execute: async (dataStream) => {
-      // Initialize the financial tools manager
-      const financialToolsManager = new FinancialToolsManager({
-        financialDatasetsApiKey: financialDatasetsApiKey || process.env.FINANCIAL_DATASETS_API_KEY!,
-        dataStream,
-      });
-      
-      dataStream.writeData({
-        type: 'user-message-id',
-        content: userMessageId,
-      });
-
-      // Start with loading, will be set to false on first chunk
-      dataStream.writeData({
-        type: 'query-loading',
-        content: {
-          isLoading: true,
-          taskNames: ['Processing your request']
-        }
-      });
-
-      // Use streamText with heroku-ai-provider for proper streaming tool calling
-      console.log('Using heroku-ai-provider for streaming tool calling...');
-      
-      const { streamText } = await import('ai');
-      const heroku = createHerokuProvider({
-        chatApiKey: herokuInferenceApiKey,
-        chatBaseUrl: 'https://us.inference.heroku.com/v1/chat/completions'
-      });
-      
-      let receivedFirstChunk = false;
-      
-      const result = streamText({
-        model: heroku.chat(model.apiIdentifier) as any, // Type assertion to resolve AI SDK version incompatibility
-        system: systemPrompt,
-        messages: coreMessages,
-        tools: financialToolsManager.getTools(),
-        maxSteps: 10,
-      });
-
-      console.log('StreamText started...');
-
-      for await (const delta of result.textStream) {
-        if (!receivedFirstChunk) {
-          console.log('First chunk received, setting loading to false');
-          // Set query-loading to false on first chunk
-          dataStream.writeData({
-            type: 'query-loading',
-            content: {
-              isLoading: false,
-              taskNames: []
-            }
-          });
-          receivedFirstChunk = true;
-        }
-
-        // Write each text delta as it comes in
-        if (delta && delta.length > 0) {
-          console.log('Writing delta chunk, length:', delta.length);
-          dataStream.writeData({
-            type: 'text-delta',
-            content: delta,
-          });
-        }
-      }
-
-      // Get final results after streaming completes
-      const [finalUsage, finalFinishReason] = await Promise.all([
-        result.usage,
-        result.finishReason
-      ]);
-      console.log('StreamText completed, finish reason:', finalFinishReason);
-
-      // Finish the response
-      dataStream.writeData({
-        type: 'finish',
-        content: {
-          finishReason: finalFinishReason,
-          usage: finalUsage,
-        }
-      });
-
-      // Save the response
-      if (session?.user?.id || userId) {
-        try {
-          const fullText = await result.text;
-          const responseMessages = [
-            {
-              role: 'assistant' as const,
-              content: fullText,
-            }
-          ];
-          
-          const responseMessagesWithoutIncompleteToolCalls = sanitizeResponseMessages(responseMessages);
-
-          if (responseMessagesWithoutIncompleteToolCalls.length > 0) {
-            try {
-              await saveMessages({
-                messages: responseMessagesWithoutIncompleteToolCalls.map(
-                  (message) => {
-                    const messageId = generateUUID();
-
-                    if (message.role === 'assistant') {
-                      dataStream.writeMessageAnnotation({
-                        messageIdFromServer: messageId,
-                      });
-                    }
-
-                    return {
-                      id: messageId,
-                      chatId: id,
-                      role: message.role,
-                      content: message.content,
-                      createdAt: new Date(),
-                    };
-                  },
-                ),
-              });
-            } catch (error) {
-              console.log('Skipping response message save for testing:', error); 
-            }
-          } else {
-            console.log('No valid messages to save');
-          }
-        } catch (error) {
-          console.error('Failed to save chat:', error);
-        }
-      }
-    },
+  // Initialize the financial tools manager
+  const financialToolsManager = new FinancialToolsManager({
+    financialDatasetsApiKey: financialDatasetsApiKey || process.env.FINANCIAL_DATASETS_API_KEY!,
+    dataStream: null, // Not needed for direct streaming
   });
+
+  // Use streamText with heroku-ai-provider for proper streaming compatible with useChat
+  console.log('Using heroku-ai-provider for streaming tool calling...');
+  
+  const { streamText } = await import('ai');
+  const heroku = createHerokuProvider({
+    chatApiKey: herokuInferenceApiKey,
+    chatBaseUrl: 'https://us.inference.heroku.com/v1/chat/completions'
+  });
+  
+  const result = streamText({
+    model: heroku.chat(model.apiIdentifier) as any, // Type assertion to resolve AI SDK version incompatibility
+    system: systemPrompt,
+    messages: coreMessages,
+    tools: financialToolsManager.getTools(),
+    maxSteps: 10,
+  });
+
+  console.log('StreamText started...');
+
+  // Save the response after completion
+  const handleSaveResponse = async () => {
+    if (session?.user?.id || userId) {
+      try {
+        const fullText = await result.text;
+        const responseMessages = [
+          {
+            role: 'assistant' as const,
+            content: fullText,
+          }
+        ];
+        
+        const responseMessagesWithoutIncompleteToolCalls = sanitizeResponseMessages(responseMessages);
+
+        if (responseMessagesWithoutIncompleteToolCalls.length > 0) {
+          try {
+            await saveMessages({
+              messages: responseMessagesWithoutIncompleteToolCalls.map(
+                (message) => {
+                  const messageId = generateUUID();
+                  return {
+                    id: messageId,
+                    chatId: id,
+                    role: message.role,
+                    content: message.content,
+                    createdAt: new Date(),
+                  };
+                },
+              ),
+            });
+          } catch (error) {
+            console.log('Skipping response message save for testing:', error); 
+          }
+        }
+      } catch (error) {
+        console.error('Failed to save chat:', error);
+      }
+    }
+  };
+
+  // Save response in background
+  handleSaveResponse();
+
+  // Return the streaming response directly - this should work with useChat
+  return result.toDataStreamResponse();
 }
 
 export async function DELETE(request: Request) {

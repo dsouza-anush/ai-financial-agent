@@ -15,7 +15,7 @@ export type AllowedTools = typeof financialTools[number];
 
 export interface FinancialToolsConfig {
   financialDatasetsApiKey: string;
-  dataStream: any; // Type this based on your actual dataStream type
+  dataStream?: any; // Optional - only needed for custom data streaming
 }
 
 export class FinancialToolsManager {
