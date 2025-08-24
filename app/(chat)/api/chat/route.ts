@@ -178,15 +178,19 @@ export async function POST(request: Request) {
         }
       }
 
-      const finalResult = await result;
-      console.log('StreamText completed, finish reason:', finalResult.finishReason);
+      // Get final results after streaming completes
+      const [finalUsage, finalFinishReason] = await Promise.all([
+        result.usage,
+        result.finishReason
+      ]);
+      console.log('StreamText completed, finish reason:', finalFinishReason);
 
       // Finish the response
       dataStream.writeData({
         type: 'finish',
         content: {
-          finishReason: finalResult.finishReason,
-          usage: finalResult.usage,
+          finishReason: finalFinishReason,
+          usage: finalUsage,
         }
       });
 
