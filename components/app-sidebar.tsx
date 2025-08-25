@@ -37,7 +37,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
               className="flex flex-row gap-3 items-center"
             >
             <span className="bg-clip-text text-xl font-bold px-2 text-primary">
-              AI Financial Agent
+              Heroku AI - Financial Analyst
             </span>
             </Link>
             <Tooltip>
