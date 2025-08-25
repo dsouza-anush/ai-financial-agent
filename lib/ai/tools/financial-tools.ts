@@ -458,7 +458,8 @@ export class FinancialToolsManager {
 
             // Add interpretation for RSI
             if (indicator === 'RSI' && processedData.data.length > 0) {
-              const latestRSI = processedData.data[0].value;
+              const firstDataPoint = processedData.data[0];
+              const latestRSI = 'value' in firstDataPoint ? firstDataPoint.value : 0;
               processedData.interpretation = {
                 level: latestRSI > 70 ? 'overbought' : latestRSI < 30 ? 'oversold' : 'neutral',
                 signal: latestRSI > 70 ? 'potential_sell' : latestRSI < 30 ? 'potential_buy' : 'hold',
