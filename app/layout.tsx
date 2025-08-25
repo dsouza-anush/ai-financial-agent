@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://chat.vercel.ai'),
   title: 'Heroku AI Finance',
   description: 'AI-powered financial analysis and investment research assistant',
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export const viewport = {
