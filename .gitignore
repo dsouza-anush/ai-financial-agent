@@ -39,3 +39,10 @@ yarn-error.log*
 
 # ignore IDEA
 .idea/
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# temporary files
+*.tmp
+*.temp
