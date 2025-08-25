@@ -114,6 +114,7 @@ export async function POST(request: Request) {
   // Initialize the financial tools manager
   const financialToolsManager = new FinancialToolsManager({
     financialDatasetsApiKey: financialDatasetsApiKey || process.env.FINANCIAL_DATASETS_API_KEY!,
+    alphaVantageApiKey: process.env.ALPHA_VANTAGE_API_KEY, // Read from environment only
     dataStream: null, // Not needed for direct streaming
   });
 

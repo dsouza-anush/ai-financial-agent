@@ -9,12 +9,14 @@ export const financialTools = [
   'getFinancialMetrics',
   'searchStocksByFilters',
   'getNews',
+  'getTechnicalIndicators',
 ] as const;
 
 export type AllowedTools = typeof financialTools[number];
 
 export interface FinancialToolsConfig {
   financialDatasetsApiKey: string;
+  alphaVantageApiKey?: string; // Optional - for technical analysis
   dataStream?: any; // Optional - only needed for custom data streaming
 }
 
@@ -346,6 +348,128 @@ export class FinancialToolsManager {
           } catch (error) {
             console.error('Error searching stocks by filters:', error);
             return { error: 'Failed to search stocks by filters' };
+          }
+        },
+      },
+      getTechnicalIndicators: {
+        description: 'Get technical analysis indicators like RSI, MACD, SMA, EMA for stock analysis. Use this when asked about technical analysis, momentum, overbought/oversold conditions, or moving averages.',
+        parameters: z.object({
+          ticker: z.string().describe('The stock ticker symbol'),
+          indicator: z.enum(['RSI', 'MACD', 'SMA', 'EMA']).describe('The technical indicator to retrieve'),
+          interval: z.enum(['1min', '5min', '15min', '30min', '60min', 'daily', 'weekly', 'monthly']).default('daily').describe('Time interval for the data'),
+          timePeriod: z.number().optional().default(14).describe('Time period for the indicator (e.g., 14 for RSI, 20 for SMA)'),
+        }),
+        execute: async ({ ticker, indicator, interval, timePeriod }: {
+          ticker: string;
+          indicator: 'RSI' | 'MACD' | 'SMA' | 'EMA';
+          interval?: '1min' | '5min' | '15min' | '30min' | '60min' | 'daily' | 'weekly' | 'monthly';
+          timePeriod?: number;
+        }) => {
+          // Check if Alpha Vantage API key is available
+          const alphaVantageApiKey = this.config.alphaVantageApiKey || process.env.ALPHA_VANTAGE_API_KEY;
+          if (!alphaVantageApiKey) {
+            return { 
+              error: 'Alpha Vantage API key not configured. Technical indicators are not available.',
+              suggestion: 'Configure ALPHA_VANTAGE_API_KEY environment variable to enable technical analysis.'
+            };
+          }
+
+          if (!this.shouldExecuteToolCall('getTechnicalIndicators', { ticker, indicator, interval, timePeriod })) {
+            console.log('Skipping duplicate getTechnicalIndicators call');
+            return null;
+          }
+
+          try {
+            // Map indicators to Alpha Vantage function names
+            const functionMap = {
+              'RSI': 'RSI',
+              'MACD': 'MACD', 
+              'SMA': 'SMA',
+              'EMA': 'EMA'
+            };
+
+            const functionName = functionMap[indicator];
+            let url = `https://www.alphavantage.co/query?function=${functionName}&symbol=${ticker}&interval=${interval}&apikey=${alphaVantageApiKey}`;
+            
+            // Add time_period for indicators that support it
+            if (['RSI', 'SMA', 'EMA'].includes(indicator)) {
+              url += `&time_period=${timePeriod}`;
+            }
+
+            const response = await this.fetchWithTimeout(url, {}, 15000); // 15 second timeout for Alpha Vantage
+            const data = await response.json();
+
+            // Check for API limit or error responses
+            if (data['Error Message']) {
+              return { 
+                error: `Alpha Vantage Error: ${data['Error Message']}`,
+                ticker,
+                indicator 
+              };
+            }
+
+            if (data['Note']) {
+              return { 
+                error: 'Alpha Vantage API call limit reached. Please try again later.',
+                note: data['Note'],
+                ticker,
+                indicator
+              };
+            }
+
+            // Parse the response based on indicator type
+            let processedData;
+            const metaData = data['Meta Data'] || {};
+            
+            if (indicator === 'MACD') {
+              const technicalData = data[`Technical Analysis: ${indicator}`] || {};
+              processedData = {
+                indicator,
+                ticker,
+                interval,
+                lastRefreshed: metaData['3: Last Refreshed'],
+                data: Object.entries(technicalData).slice(0, 10).map(([date, values]: [string, any]) => ({
+                  date,
+                  macd: parseFloat(values.MACD || 0),
+                  signal: parseFloat(values.MACD_Signal || 0),
+                  histogram: parseFloat(values.MACD_Hist || 0)
+                }))
+              };
+            } else {
+              // RSI, SMA, EMA have similar structure
+              const technicalData = data[`Technical Analysis: ${indicator}`] || {};
+              processedData = {
+                indicator,
+                ticker,
+                interval,
+                timePeriod,
+                lastRefreshed: metaData['3: Last Refreshed'],
+                data: Object.entries(technicalData).slice(0, 10).map(([date, values]: [string, any]) => ({
+                  date,
+                  value: parseFloat(values[indicator] || 0)
+                }))
+              };
+            }
+
+            // Add interpretation for RSI
+            if (indicator === 'RSI' && processedData.data.length > 0) {
+              const latestRSI = processedData.data[0].value;
+              processedData.interpretation = {
+                level: latestRSI > 70 ? 'overbought' : latestRSI < 30 ? 'oversold' : 'neutral',
+                signal: latestRSI > 70 ? 'potential_sell' : latestRSI < 30 ? 'potential_buy' : 'hold',
+                value: latestRSI
+              };
+            }
+
+            return processedData;
+          } catch (error) {
+            console.error('Error fetching technical indicators:', error);
+            return { 
+              error: 'Failed to fetch technical indicators from Alpha Vantage',
+              ticker,
+              indicator,
+              details: error instanceof Error ? error.message : 'Unknown error'
+            };
           }
         },
       },
