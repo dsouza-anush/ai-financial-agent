@@ -9,8 +9,8 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://chat.vercel.ai'),
-  title: 'Financial Datasets | Chat',
-  description: 'Chat with financial datasets',
+  title: 'AI Financial Agent | Chat',
+  description: 'AI-powered financial analysis and investment assistant',
 };
 
 export const viewport = {

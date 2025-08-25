@@ -135,7 +135,7 @@ export function ApiKeysModal({
           </div>
           <div className="space-y-2">
             <label htmlFor="financial-key" className="text-sm font-medium">
-              Financial Datasets API Key {serverKeys?.hasFinancialKey && <span className="text-green-600">(Configured)</span>}
+              Financial Data API Key {serverKeys?.hasFinancialKey && <span className="text-green-600">(Configured)</span>}
             </label>
             <div className="relative">
               <Input
@@ -143,7 +143,7 @@ export function ApiKeysModal({
                 type={showFinancialKey ? "text" : "password"}
                 value={financialKey}
                 onChange={(e) => setFinancialKey(e.target.value)}
-                placeholder={serverKeys?.hasFinancialKey ? "Using server-configured key" : "Enter your Financial Datasets API key"}
+                placeholder={serverKeys?.hasFinancialKey ? "Using server-configured key" : "Enter your Financial Data API key"}
                 disabled={serverKeys?.hasFinancialKey}
               />
               <button
@@ -158,17 +158,7 @@ export function ApiKeysModal({
               {serverKeys?.hasFinancialKey ? (
                 "✅ API key is configured on the server"
               ) : (
-                <>
-                  Get your API key from{' '}
-                  <a 
-                    href="https://financialdatasets.ai" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    financialdatasets.ai
-                  </a>
-                </>
+                "Financial data API key for market data access"
               )}
             </p>
           </div>
