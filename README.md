@@ -1,8 +1,10 @@
-# AI Financial Agent 🤖
+# Heroku AI Finance
 
-✅ **CURRENT STATUS: WORKING - See STATUS.md for details**
+**Deploy-Ready Heroku Reference App**
 
-This is a proof of concept AI financial agent adapted for Heroku deployment with Claude 4 Sonnet. The goal is to explore AI for investment research. This project is for **educational** purposes only.
+A complete AI-powered financial analysis assistant built with **Claude 4 Sonnet** and **Heroku Inference API**. Features real-time stock data, technical analysis, and intelligent financial insights. Perfect reference implementation for deploying AI applications on Heroku.
+
+**[Live Demo](https://ai-financial-agent-demo-0b9a1e91c541.herokuapp.com/)**
 
 <img width="1709" alt="Screenshot 2025-01-06 at 5 53 59 PM" src="https://github.com/user-attachments/assets/7ef1729b-f2e1-477c-99e2-1184c1bfa1cd" />
 
@@ -18,46 +20,52 @@ This project is for **educational and research purposes only**.
 
 By using this software, you agree to use it solely for learning purposes.
 
-## 📋 Current State
+## Quick Deploy to Heroku
 
-**The application is working!** Before making changes:
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
-1. **Read [`STATUS.md`](./STATUS.md)** - Current working state and known issues
-2. **Follow [`DEBUGGING_GUIDE.md`](./DEBUGGING_GUIDE.md)** - Testing and development guide
-3. **Live Demo:** https://ai-financial-agent-demo-0b9a1e91c541.herokuapp.com/
+**One-click deployment ready!** All you need:
+1. **Heroku Account** (free tier works)
+2. **Heroku Inference API Key** ([Get it here](https://devcenter.heroku.com/articles/heroku-inference-api))
+3. **Optional**: Alpha Vantage API key for technical analysis ([Free tier: 25 calls/day](https://www.alphavantage.co/support/#api-key))
 
-## Table of Contents 📖
-- [Features](#features)
-- [Setup](#setup)
+## Table of Contents
+- [Quick Deploy](#quick-deploy-to-heroku)
+- [Features](#features)  
 - [Architecture](#architecture)
-- [Heroku Deployment](#heroku-deployment)
+- [Environment Variables](#environment-variables)
+- [Local Development](#local-development)
+- [AI Tools](#ai-tools-available)
+- [Example Queries](#example-queries)
+- [Technical Documentation](#technical-documentation)
 
 ## Features
 
-### ✅ What's Working
+### What's Working
 - **Chat interface** with Claude 4 Sonnet AI
 - **Financial data tools** - stock prices, company financials, news
-- **Real-time data** from Financial Datasets API
+- **Technical analysis** - RSI, MACD, SMA, EMA indicators via Alpha Vantage
+- **Real-time data** from multiple financial APIs
 - **Streaming responses** in chat interface
-- **Authentication** system (temporarily bypassed for testing)
+- **Authentication** system with NextAuth.js
 - **Database** storage for chat history
 
-### ⚠️ Known Limitations
-- **API Limits** - Some tickers (e.g., CRM/Salesforce) hit payment limits on Financial Datasets API
-- **Authentication** - Currently bypassed for easier testing
-- **Free Tier** - Limited to basic financial queries
+### Known Limitations
+- **API Limits** - Some tickers may hit payment limits on free tiers
+- **Rate Limiting** - Alpha Vantage free tier: 25 calls/day
+- **Free Tier** - Limited to basic financial queries without premium API keys
 
 ## Architecture
 
-### 🔧 Technical Stack
+### Technical Stack
 - **AI Model:** Claude 4 Sonnet via Heroku Inference API
 - **Framework:** Next.js 15.0.3-canary.2
 - **Database:** PostgreSQL with Drizzle ORM
 - **Deployment:** Heroku
-- **Financial Data:** Financial Datasets API
+- **Financial Data:** Financial Datasets API + Alpha Vantage
 - **AI SDK:** AI SDK v4.0.20 with heroku-ai-provider integration
 
-### 🏗️ Key Components
+### Key Components
 - `app/(chat)/api/chat/route.ts` - Main chat API with streaming
 - `lib/ai/tools/financial-tools.ts` - Financial data integration
 - `components/chat.tsx` - Frontend chat interface
@@ -109,27 +117,71 @@ NODE_TLS_REJECT_UNAUTHORIZED=0
 
 **Important**: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various OpenAI and authentication provider accounts.
 
-## Development
+## Environment Variables
 
-### 🚀 Running Locally
+Set these in your Heroku app or `.env.local` file:
 
 ```bash
-npm run dev
-# Visit http://localhost:3000
-# Try asking "What is the current price of Apple?"
-# Expected: Working AI response with real financial data
+# Required - Heroku Inference API
+INFERENCE_KEY=your-heroku-inference-api-key
+
+# Required - Financial data access  
+FINANCIAL_DATASETS_API_KEY=your-financial-datasets-api-key
+
+# Optional - Technical analysis (25 calls/day free)
+ALPHA_VANTAGE_API_KEY=your-alpha-vantage-api-key
+
+# Required - Authentication
+AUTH_SECRET=your-auth-secret
+
+# Required - Database
+DATABASE_URL=your-postgresql-connection-string
 ```
 
-### 📊 Example Queries That Work
-- "What is the current price of Apple?" (AAPL)
-- "Show me Tesla's financial metrics" (TSLA)
-- "Get news for Google" (GOOGL)
-- "Compare the balance sheets of Microsoft" (MSFT)
+## Local Development
 
-### 🔧 Development Tips
-- Financial tools cache duplicate calls to avoid API rate limits
-- Some tickers may fail due to API payment requirements
-- Check STATUS.md for current API limitations and workarounds
+```bash
+git clone https://github.com/your-repo/heroku-ai-finance.git
+cd heroku-ai-finance
+npm install
+npm run dev
+# Visit http://localhost:3000
+```
+
+## AI Tools Available
+
+### Financial Data Tools
+- **getStockPrices** - Current and historical stock prices
+- **getIncomeStatements** - Company income statements
+- **getBalanceSheets** - Company balance sheets  
+- **getCashFlowStatements** - Cash flow statements
+- **getFinancialMetrics** - P/E ratio, debt ratios, ROE
+- **searchStocksByFilters** - Find stocks by financial criteria
+- **getNews** - Recent company news and events
+
+### Technical Analysis Tools (Alpha Vantage)
+- **getTechnicalIndicators** - RSI, MACD, SMA, EMA indicators
+- **Smart interpretation** - Overbought/oversold signals
+- **Historical data** - 10-day indicator history
+
+## Example Queries
+
+### Basic Queries
+- "What is the current price of Apple?"
+- "Show me Tesla's financial metrics"
+- "Get news for Google"
+- "Compare the balance sheets of Microsoft and Apple"
+
+### Technical Analysis
+- "What's the RSI for Apple stock?"
+- "Is Tesla overbought or oversold?"
+- "Show me MACD indicators for Microsoft"
+- "Get the 20-day moving average for Google"
+
+### Advanced Analysis
+- "Analyze Apple stock comprehensively"
+- "Find stocks with revenue over 50 billion"
+- "Compare the financial health of tech companies"
 
 ## Heroku Deployment
 
@@ -184,6 +236,18 @@ npm run db:studio    # Database management
 - Re-enable authentication for production use
 - Add more robust error handling for API failures
 
-For detailed technical information, see [`STATUS.md`](./STATUS.md) and [`HEROKU_VS_OPENAI_API_ANALYSIS.md`](./HEROKU_VS_OPENAI_API_ANALYSIS.md).
+## Technical Documentation
+
+### System Architecture
+Comprehensive system architecture with component diagrams and data flow:
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete system architecture documentation with Mermaid diagrams
+
+### Heroku Integration
+Deep dive into the heroku-ai-provider integration:
+- **[HEROKU_AI_PROVIDER.md](./HEROKU_AI_PROVIDER.md)** - Why heroku-ai-provider is critical for tool calling with Claude
+
+### Additional Resources
+- [`STATUS.md`](./STATUS.md) - Development status and fixes applied
+- [`HEROKU_VS_OPENAI_API_ANALYSIS.md`](./HEROKU_VS_OPENAI_API_ANALYSIS.md) - API comparison analysis
 
 
