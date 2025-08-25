@@ -395,6 +395,11 @@ export class FinancialToolsManager {
             if (['RSI', 'SMA', 'EMA'].includes(indicator)) {
               url += `&time_period=${timePeriod}`;
             }
+            
+            // Add series_type for RSI (required parameter)
+            if (indicator === 'RSI') {
+              url += `&series_type=close`;
+            }
 
             const response = await this.fetchWithTimeout(url, {}, 15000); // 15 second timeout for Alpha Vantage
             const data = await response.json();
