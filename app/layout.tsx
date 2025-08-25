@@ -9,7 +9,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://chat.vercel.ai'),
-  title: 'Heroku AI - Financial Analyst',
+  title: 'Heroku AI Finance',
   description: 'AI-powered financial analysis and investment research assistant',
 };
 
