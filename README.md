@@ -25,9 +25,10 @@ By using this software, you agree to use it solely for learning purposes.
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 **One-click deployment ready!** All you need:
-1. **Heroku Account** (free tier works)
+1. **Heroku Account** (requires paid plan for deployment)
 2. **Heroku Inference API Key** ([Get it here](https://devcenter.heroku.com/articles/heroku-inference-api))
-3. **Optional**: Alpha Vantage API key for technical analysis ([Free tier: 25 calls/day](https://www.alphavantage.co/support/#api-key))
+3. **Financial Datasets API Key** ([Get it here](https://financialdatasets.ai/) - required for stock data)
+4. **Optional**: Alpha Vantage API key for technical analysis ([Free tier: 25 calls/day](https://www.alphavantage.co/support/#api-key))
 
 ## Table of Contents
 - [Quick Deploy](#quick-deploy-to-heroku)
@@ -51,9 +52,9 @@ By using this software, you agree to use it solely for learning purposes.
 - **Database** storage for chat history
 
 ### Known Limitations
-- **API Limits** - Some tickers may hit payment limits on free tiers
-- **Rate Limiting** - Alpha Vantage free tier: 25 calls/day
-- **Free Tier** - Limited to basic financial queries without premium API keys
+- **API Costs** - Requires paid Financial Datasets API key for stock data
+- **Rate Limiting** - Alpha Vantage free tier: 25 calls/day for technical indicators
+- **Heroku Deployment** - Requires paid Heroku plan (no free tier available)
 
 ## Architecture
 
