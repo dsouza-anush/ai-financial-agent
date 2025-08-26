@@ -82,7 +82,14 @@ export function Chat({
       // Check if user has reached their free message limit
       const maxFreeMessageCount = 0;
       const localApiKey = getLocalOpenAIApiKey();
-      if (data.count >= maxFreeMessageCount && !localApiKey) {
+      
+      // Check if server has API keys configured
+      const serverKeysResponse = await fetch('/api/keys');
+      const serverKeys = await serverKeysResponse.json();
+      const hasServerKeys = serverKeys.hasInferenceKey || serverKeys.hasOpenAIKey;
+      
+      // Only show modal if no API keys are available (neither local nor server)
+      if (data.count >= maxFreeMessageCount && !localApiKey && !hasServerKeys) {
         setShowApiKeysModal(true);
         return;
       }
