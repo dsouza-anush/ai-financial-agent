@@ -4,7 +4,7 @@ import { defineConfig } from 'drizzle-kit';
 config({
   path: ['.env.local', '.env'].find((path) => {
     try {
-      require('fs').accessSync(path);
+      require('node:fs').accessSync(path);
       return true;
     } catch {
       return false;

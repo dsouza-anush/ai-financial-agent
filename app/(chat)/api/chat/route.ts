@@ -1,14 +1,9 @@
 import {
   type Message,
   convertToCoreMessages,
-  createDataStreamResponse,
-  generateObject,
-  streamText,
 } from 'ai';
-import { z } from 'zod';
 
 import { auth } from '@/app/(auth)/auth';
-import { customModel } from '@/lib/ai';
 import { createHerokuProvider } from 'heroku-ai-provider';
 import { models } from '@/lib/ai/models';
 import {
@@ -27,7 +22,6 @@ import {
 } from '@/lib/utils';
 
 import { generateTitleFromUserMessage } from '../../actions';
-import { AISDKExporter } from 'langsmith/vercel';
 import { 
   FinancialToolsManager, 
   financialTools, 
@@ -85,7 +79,8 @@ export async function POST(request: Request) {
     return new Response('No user message found', { status: 400 });
   }
 
-  const chat = await getChatById({ id });
+  // Temporarily skip database for testing
+  const chat = null; // await getChatById({ id });
 
   if (!chat) {
     const title = await generateTitleFromUserMessage({ 
@@ -101,15 +96,16 @@ export async function POST(request: Request) {
 
   const userMessageId = generateUUID();
 
-  try {
-    await saveMessages({
-      messages: [
-        { ...userMessage, id: userMessageId, createdAt: new Date(), chatId: id },
-      ],
-    });
-  } catch (error) {
-    console.log('Skipping message save for testing:', error);
-  }
+  // Temporarily skip database saves for testing
+  // try {
+  //   await saveMessages({
+  //     messages: [
+  //       { ...userMessage, id: userMessageId, createdAt: new Date(), chatId: id },
+  //     ],
+  //   });
+  // } catch (error) {
+  //   console.log('Skipping message save for testing:', error);
+  // }
 
   // Initialize the financial tools manager
   const financialToolsManager = new FinancialToolsManager({

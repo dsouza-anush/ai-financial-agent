@@ -413,10 +413,10 @@ export class FinancialToolsManager {
               };
             }
 
-            if (data['Note']) {
+            if (data.Note) {
               return { 
                 error: 'Alpha Vantage API call limit reached. Please try again later.',
-                note: data['Note'],
+                note: data.Note,
                 ticker,
                 indicator
               };
@@ -435,9 +435,9 @@ export class FinancialToolsManager {
                 lastRefreshed: metaData['3: Last Refreshed'],
                 data: Object.entries(technicalData).slice(0, 10).map(([date, values]: [string, any]) => ({
                   date,
-                  macd: parseFloat(values.MACD || 0),
-                  signal: parseFloat(values.MACD_Signal || 0),
-                  histogram: parseFloat(values.MACD_Hist || 0)
+                  macd: Number.parseFloat(values.MACD || 0),
+                  signal: Number.parseFloat(values.MACD_Signal || 0),
+                  histogram: Number.parseFloat(values.MACD_Hist || 0)
                 }))
               };
             } else {
@@ -451,7 +451,7 @@ export class FinancialToolsManager {
                 lastRefreshed: metaData['3: Last Refreshed'],
                 data: Object.entries(technicalData).slice(0, 10).map(([date, values]: [string, any]) => ({
                   date,
-                  value: parseFloat(values[indicator] || 0)
+                  value: Number.parseFloat(values[indicator] || 0)
                 }))
               };
             }

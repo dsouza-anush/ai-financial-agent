@@ -2,7 +2,7 @@
   "name": "AI Financial Agent",
   "description": "An AI-powered financial analysis and research agent built with Next.js",
   "repository": "https://github.com/virattt/ai-financial-agent",
-  "logo": "https://cdn.jsdelivr.net/gh/virattt/ai-financial-agent/public/images/demo-thumbnail.png",
+  "logo": "https://cdn.jsdelivr.net/gh/dsouza-anush/ai-financial-agent/public/favicon.png",
   "keywords": ["nextjs", "ai", "financial", "agent", "openai", "postgres"],
   "env": {
     "HEROKU_INFERENCE_API_KEY": {
