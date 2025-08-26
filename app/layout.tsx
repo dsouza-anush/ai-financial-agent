@@ -13,11 +13,11 @@ export const metadata: Metadata = {
   description: 'AI-powered financial analysis and investment research assistant',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: '16x16', type: 'image/x-icon' },
-      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico?v=2', sizes: '16x16', type: 'image/x-icon' },
+      { url: '/favicon.png?v=2', sizes: '32x32', type: 'image/png' },
     ],
-    shortcut: '/favicon.ico',
-    apple: '/favicon.png',
+    shortcut: '/favicon.ico?v=2',
+    apple: '/favicon.png?v=2',
   },
 };
 
